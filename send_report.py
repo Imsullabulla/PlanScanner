@@ -9,7 +9,7 @@ import sys
 from datetime import date
 from email.mime.text import MIMEText
 
-TO_ADDRESS = "sebastian.christensen@sellinggroup.com"
+TO_ADDRESS = "sebastian.christensen@sallinggroup.com"
 
 
 def main():
