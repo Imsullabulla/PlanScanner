@@ -1,0 +1,59 @@
+name: PlanScanner Ugentlig Scan
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # Mandag 06:00 UTC = 07:00/08:00 dansk tid
+  workflow_dispatch:       # Manuel kørsel mulig fra GitHub Actions
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout kode
+        uses: actions/checkout@v4
+
+      - name: Gendan SQLite-database fra cache
+        uses: actions/cache@v4
+        with:
+          path: planscanner.db
+          key: planscanner-db-${{ runner.os }}
+          restore-keys: |
+            planscanner-db-
+
+      - name: Opsæt Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Installer afhængigheder
+        run: pip install -r requirements.txt
+
+      - name: Sæt dato
+        run: echo "SCAN_DATE=$(date '+%Y-%m-%d')" >> $GITHUB_ENV
+
+      - name: Kør ugentlig scan (seneste 7 dage)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
+        run: |
+          {
+            echo "================================================"
+            echo "PlanScanner — Ugentlig scanning"
+            echo "Dato: ${{ env.SCAN_DATE }}"
+            echo "Log: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo "================================================"
+            echo ""
+            python scan_job.py --days 7
+            echo ""
+            echo "Relevante planer er skrevet til Notion."
+          } 2>&1 | tee scan_output.txt
+
+      - name: Send ugerapport på e-mail
+        if: always()
+        env:
+          GMAIL_USERNAME: ${{ secrets.GMAIL_USERNAME }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: cat scan_output.txt | python send_report.py

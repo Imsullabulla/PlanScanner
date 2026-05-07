@@ -1,0 +1,20 @@
+# API-nøgler — aldrig commit
+.env
+
+# SQLite-database (genopbygges automatisk)
+*.db
+
+# Python-cache
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.venv/
+venv/
+
+# Testscripts fra udviklingsprocessen
+test_*.py
+
+# Midlertidige filer fra GitHub Actions
+scan_output.txt
+*.log
