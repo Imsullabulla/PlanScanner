@@ -4,11 +4,13 @@ Kør lokalt:  python scan_job.py
 Med flag:    python scan_job.py --days 7   (scan de seneste 7 dage)
 """
 import argparse
+import json
 import logging
 import os
 import sys
 
 import pathlib
+from datetime import date, timedelta
 from dotenv import load_dotenv
 from shapely.geometry import shape
 
@@ -45,6 +47,15 @@ def compute_centroid(geometry: dict) -> tuple[float, float]:
 def run_scan(days_back: int = 1):
     log.info(f"=== PlanScanner start — scanner {days_back} dag(e) tilbage ===")
     log.info(f"Notion-output: {'aktiveret' if NOTION_ENABLED else 'deaktiveret (ingen nøgle)'}")
+
+    scan_date = date.today().isoformat()
+    report = {
+        "date": scan_date,
+        "days_back": days_back,
+        "period_start": (date.today() - timedelta(days=days_back)).isoformat(),
+        "period_end": scan_date,
+        "relevant_plans": [],
+    }
 
     token = get_token()
 
@@ -110,11 +121,41 @@ def run_scan(days_back: int = 1):
 
         if NOTION_ENABLED and assessment.get("relevant") and prioritet != "ikke relevant":
             try:
-                write_plan_to_notion(plan, assessment, population, competitors)
+                notion_url = write_plan_to_notion(plan, assessment, population, competitors)
                 notion_written += 1
                 log.info(f"  Skrevet til Notion")
+
+                props = plan["properties"]
+                report["relevant_plans"].append({
+                    "name": plan_name,
+                    "kommune": props.get("kommunenavn", ""),
+                    "status": "Forslag" if props.get("status") == "F" else "Vedtaget",
+                    "plantype": props.get("anvendelsegenerel", ""),
+                    "prioritet": prioritet,
+                    "format_match": assessment.get("format_match", []),
+                    "aktion": assessment.get("aktion", ""),
+                    "kannibaliseringsrisiko": assessment.get("kannibaliseringsrisiko", "ingen"),
+                    "hoering_aktiv": assessment.get("hoering_aktiv", False),
+                    "horingsfrist": str(props.get("datoslut", "") or ""),
+                    "sammenfatning": assessment.get("sammenfattning", ""),
+                    "pdf_url": props.get("doklink", ""),
+                    "notion_url": notion_url or "",
+                })
             except Exception as e:
-                log.error(f"  → Notion-fejl: {e}")
+                log.error(f"  Notion-fejl: {e}")
+
+    report["stats"] = {
+        "total_fetched": len(all_plans),
+        "ai_analysed": ai_analysed,
+        "notion_written": notion_written,
+        "skipped_irrelevant": skipped_irrelevant,
+        "skipped_duplicate": skipped_duplicate,
+    }
+
+    summary_path = pathlib.Path(__file__).parent / "scan_summary.json"
+    with open(summary_path, "w", encoding="utf-8") as f:
+        json.dump(report, f, ensure_ascii=False, indent=2)
+    log.info(f"Rapport gemt: {summary_path}")
 
     log.info(
         f"=== Færdig === "

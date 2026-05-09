@@ -101,3 +101,4 @@ def write_plan_to_notion(plan: dict, assessment: dict,
         timeout=15
     )
     response.raise_for_status()
+    return response.json().get("url", "")
