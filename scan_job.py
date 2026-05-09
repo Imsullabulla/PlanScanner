@@ -17,11 +17,9 @@ from shapely.geometry import shape
 load_dotenv(dotenv_path=pathlib.Path(__file__).parent / ".env", override=True)
 
 from scanner.plandata_api import fetch_new_plans, fetch_adopted_plans, is_potentially_relevant
-from scanner.enrichment import get_postal_from_coordinates, find_competitors_near_plan
 from scanner.dst_api import get_population_by_municipality
 from scanner.ai_classifier import classify_plan_with_ai
-from scanner.vejdirektoratet_api import get_nearest_roads
-from scanner.bbr_api import get_existing_land_use
+from scanner.overpass_client import fetch_site_context
 
 # Brug lokal SQLite indtil SharePoint er konfigureret
 # Skift til: from scanner.sharepoint_storage import get_token, plan_already_scanned, save_plan
@@ -101,9 +99,10 @@ def run_scan(days_back: int = 1):
 
         komnr = plan["properties"].get("komnr")
         population = get_population_by_municipality(komnr) if komnr else 0
-        competitors = find_competitors_near_plan(lat, lon, radius_km=2.0)
-        roads = get_nearest_roads(lat, lon, radius_m=500)
-        land_use = get_existing_land_use(lat, lon, radius_m=150)
+        site = fetch_site_context(lat, lon)
+        competitors = site["competitors"]
+        roads       = site["roads"]
+        land_use    = site["land_use"]
 
         kommune = plan["properties"].get("kommunenavn", "?")
         log.info(f"AI-analyse: {plan_name} ({kommune}) — befolkning: {population:,} — konkurrenter: {len(competitors)}")
