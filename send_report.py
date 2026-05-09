@@ -62,6 +62,13 @@ def plan_card(plan: dict) -> str:
         f'Se i Notion &rarr;</a>'
     ) if notion_url else ""
 
+    pdf_url = plan.get("pdf_url", "")
+    pdf_btn = (
+        f'&nbsp;&nbsp;<a href="{pdf_url}" style="display:inline-block;margin-top:12px;'
+        f'color:#6b7280;font-size:13px;text-decoration:none;font-weight:500;">'
+        f'&#128196; Lokalplan PDF</a>'
+    ) if pdf_url and "null" not in pdf_url.lower() else ""
+
     hoering_html = ""
     if plan.get("hoering_aktiv") and plan.get("horingsfrist"):
         hoering_html = (
@@ -96,7 +103,7 @@ def plan_card(plan: dict) -> str:
               {badge(aktion, ACTION_BADGE_STYLE) if aktion else ""}
             </div>
             {hoering_html}
-            {notion_btn}
+            {notion_btn}{pdf_btn}
           </td>
         </tr>"""
 
