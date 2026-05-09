@@ -76,8 +76,50 @@ def plan_card(plan: dict) -> str:
             f'&#9200; Høringsfrist: <strong>{plan["horingsfrist"]}</strong></div>'
         )
 
-    aktion = plan.get("aktion", "")
+    aktion        = plan.get("aktion", "")
     sammenfatning = plan.get("sammenfatning", "")
+    population    = plan.get("population", 0)
+    plantype      = plan.get("plantype", "")
+    scannet       = plan.get("scannet", "")
+
+    pop_fmt = f"{population:,}".replace(",", ".") if population else "—"
+
+    meta_grid = f"""
+            <table width="100%" cellpadding="0" cellspacing="0"
+                   style="margin:10px 0 12px;border:1px solid #f0f0ee;
+                          border-radius:6px;overflow:hidden;">
+              <tr>
+                <td width="50%" style="padding:8px 12px;
+                                       border-right:1px solid #f0f0ee;
+                                       border-bottom:1px solid #f0f0ee;">
+                  <div style="font-size:10px;color:#9b9b9b;font-weight:600;
+                               text-transform:uppercase;letter-spacing:0.05em;
+                               margin-bottom:3px;">Plantype</div>
+                  <div style="font-size:13px;color:#37352f;">{plantype or "—"}</div>
+                </td>
+                <td width="50%" style="padding:8px 12px;
+                                       border-bottom:1px solid #f0f0ee;">
+                  <div style="font-size:10px;color:#9b9b9b;font-weight:600;
+                               text-transform:uppercase;letter-spacing:0.05em;
+                               margin-bottom:3px;">Befolkning i kommunen</div>
+                  <div style="font-size:13px;color:#37352f;">{pop_fmt}</div>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding:8px 12px;border-right:1px solid #f0f0ee;">
+                  <div style="font-size:10px;color:#9b9b9b;font-weight:600;
+                               text-transform:uppercase;letter-spacing:0.05em;
+                               margin-bottom:3px;">Prioritet</div>
+                  <div>{badge(pri_label, pri_style)}</div>
+                </td>
+                <td style="padding:8px 12px;">
+                  <div style="font-size:10px;color:#9b9b9b;font-weight:600;
+                               text-transform:uppercase;letter-spacing:0.05em;
+                               margin-bottom:3px;">Scannet</div>
+                  <div style="font-size:13px;color:#37352f;">{scannet or "—"}</div>
+                </td>
+              </tr>
+            </table>"""
 
     return f"""
         <tr>
@@ -91,9 +133,9 @@ def plan_card(plan: dict) -> str:
             </div>
             <div style="font-size:13px;color:#787774;margin-bottom:10px;">
               {plan.get("kommune", "")} &nbsp;&middot;&nbsp;
-              {plan.get("plantype", "")} &nbsp;&middot;&nbsp;
               {plan.get("status", "")}
             </div>
+            {meta_grid}
             <div style="font-size:14px;color:#37352f;line-height:1.65;
                         margin-bottom:10px;">
               {sammenfatning}

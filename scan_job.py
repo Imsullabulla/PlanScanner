@@ -132,6 +132,7 @@ def run_scan(days_back: int = 1):
                     "status": "Forslag" if props.get("status") == "F" else "Vedtaget",
                     "plantype": props.get("anvendelsegenerel", ""),
                     "prioritet": prioritet,
+                    "population": population,
                     "format_match": assessment.get("format_match", []),
                     "aktion": assessment.get("aktion", ""),
                     "kannibaliseringsrisiko": assessment.get("kannibaliseringsrisiko", "ingen"),
@@ -140,6 +141,7 @@ def run_scan(days_back: int = 1):
                     "sammenfatning": assessment.get("sammenfattning", ""),
                     "pdf_url": props.get("doklink", ""),
                     "notion_url": notion_url or "",
+                    "scannet": scan_date,
                 })
             except Exception as e:
                 log.error(f"  Notion-fejl: {e}")
