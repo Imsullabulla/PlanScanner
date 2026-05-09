@@ -84,6 +84,92 @@ def plan_card(plan: dict) -> str:
 
     pop_fmt = f"{population:,}".replace(",", ".") if population else "—"
 
+    # ── Tekniske bestemmelser fra PDF ──────────────────────────────────────────
+    tech_rows = []
+    if plan.get("bebyggelsesprocent") is not None:
+        tech_rows.append(("Bebyggelsesprocent", f"{plan['bebyggelsesprocent']} %"))
+    if plan.get("max_bygningshojde_m") is not None:
+        etager = f" ({plan['max_etager']} etg.)" if plan.get("max_etager") else ""
+        tech_rows.append(("Max bygningshøjde", f"{plan['max_bygningshojde_m']} m{etager}"))
+    if plan.get("parkeringsnorm"):
+        tech_rows.append(("Parkeringsnorm", plan["parkeringsnorm"]))
+    if plan.get("planlagte_boliger") is not None:
+        tech_rows.append(("Planlagte boliger", f"{plan['planlagte_boliger']} enheder"))
+    if plan.get("tidshorisont"):
+        tech_rows.append(("Tidshorisont", plan["tidshorisont"]))
+    if plan.get("varetilkorsel_mulighed") is not None:
+        val = "Ja ✓" if plan["varetilkorsel_mulighed"] else "Ikke angivet"
+        tech_rows.append(("Varetilkørsel", val))
+    if plan.get("specifikke_forbud"):
+        tech_rows.append(("Forbud / begrænsninger",
+                          " · ".join(plan["specifikke_forbud"][:3])))
+
+    tech_section = ""
+    if tech_rows:
+        rows_html = "".join(
+            f'<tr>'
+            f'<td style="padding:5px 10px 5px 0;font-size:11px;color:#9b9b9b;'
+            f'font-weight:600;text-transform:uppercase;letter-spacing:0.04em;'
+            f'white-space:nowrap;width:40%;">{label}</td>'
+            f'<td style="padding:5px 0;font-size:13px;color:#37352f;">{value}</td>'
+            f'</tr>'
+            for label, value in tech_rows
+        )
+        tech_section = f"""
+            <div style="margin:12px 0 4px;font-size:10px;font-weight:700;
+                        color:#9b9b9b;text-transform:uppercase;
+                        letter-spacing:0.06em;">Bestemmelser fra planen</div>
+            <table width="100%" cellpadding="0" cellspacing="0"
+                   style="border:1px solid #f0f0ee;border-radius:6px;
+                          padding:4px 12px;margin-bottom:4px;">
+              {rows_html}
+            </table>"""
+
+    # ── Trafikdata ─────────────────────────────────────────────────────────────
+    roads = plan.get("trafikdata", [])
+    traffic_section = ""
+    if roads:
+        road_rows = "".join(
+            f'<tr>'
+            f'<td style="padding:4px 10px 4px 0;font-size:13px;color:#37352f;'
+            f'width:55%;">{r["vejnavn"]}</td>'
+            f'<td style="padding:4px 0;font-size:12px;color:#787774;">'
+            f'{r["vejtype"]}</td>'
+            f'<td style="padding:4px 0;font-size:12px;color:#37352f;'
+            f'text-align:right;white-space:nowrap;">'
+            f'~{r["adt_estimat"]:,} ÅDT</td>'.replace(",", ".")
+            + '</tr>'
+            for r in roads
+        )
+        traffic_section = f"""
+            <div style="margin:12px 0 4px;font-size:10px;font-weight:700;
+                        color:#9b9b9b;text-transform:uppercase;
+                        letter-spacing:0.06em;">Nærmeste veje (estimeret ÅDT)</div>
+            <table width="100%" cellpadding="0" cellspacing="0"
+                   style="border:1px solid #f0f0ee;border-radius:6px;
+                          padding:4px 12px;margin-bottom:4px;">
+              {road_rows}
+            </table>
+            <div style="font-size:10px;color:#b0aca6;margin-bottom:8px;">
+              Estimeret fra OSM vejklassificering · officielle tal via Vejman.dk
+            </div>"""
+
+    # ── Eksisterende bebyggelse ────────────────────────────────────────────────
+    beb = plan.get("bebyggelse", {})
+    beb_section = ""
+    if beb:
+        icon = "🏗️" if beb.get("har_bebyggelse") else "🌱"
+        beb_desc = beb.get("beskrivelse", "Ikke tilgængeligt")
+        beb_section = f"""
+            <div style="margin:12px 0 4px;font-size:10px;font-weight:700;
+                        color:#9b9b9b;text-transform:uppercase;
+                        letter-spacing:0.06em;">Eksisterende bebyggelse</div>
+            <div style="border:1px solid #f0f0ee;border-radius:6px;
+                        padding:8px 12px;font-size:13px;color:#37352f;
+                        margin-bottom:4px;">
+              {icon} {beb_desc}
+            </div>"""
+
     meta_grid = f"""
             <table width="100%" cellpadding="0" cellspacing="0"
                    style="margin:10px 0 12px;border:1px solid #f0f0ee;
@@ -140,6 +226,9 @@ def plan_card(plan: dict) -> str:
                         margin-bottom:10px;">
               {sammenfatning}
             </div>
+            {tech_section}
+            {traffic_section}
+            {beb_section}
             <div>
               {badge(risk_label, risk_style)}
               {badge(aktion, ACTION_BADGE_STYLE) if aktion else ""}

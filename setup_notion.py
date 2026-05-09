@@ -62,7 +62,12 @@ NEW_PROPERTIES = {
         }
     },
     "PDF-link": {"url": {}},
-    "Scannet": {"date": {}}
+    "Scannet": {"date": {}},
+    "Bebyggelsesprocent": {"number": {"format": "percent"}},
+    "Planlagte boliger": {"number": {"format": "number"}},
+    "Tidshorisont": {"rich_text": {}},
+    "Parkeringsnorm": {"rich_text": {}},
+    "Varetilkørsel": {"checkbox": {}}
 }
 
 r = requests.patch(

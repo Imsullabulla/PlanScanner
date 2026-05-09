@@ -91,6 +91,24 @@ def write_plan_to_notion(plan: dict, assessment: dict,
     if pdf_url and "null" not in pdf_url.lower():
         page_properties["PDF-link"] = {"url": pdf_url}
 
+    # AI-udtræk fra PDF
+    if assessment.get("bebyggelsesprocent") is not None:
+        page_properties["Bebyggelsesprocent"] = {
+            "number": assessment["bebyggelsesprocent"] / 100  # Notion percent = 0–1
+        }
+    if assessment.get("planlagte_boliger") is not None:
+        page_properties["Planlagte boliger"] = {"number": assessment["planlagte_boliger"]}
+    if assessment.get("tidshorisont"):
+        page_properties["Tidshorisont"] = {
+            "rich_text": [{"text": {"content": str(assessment["tidshorisont"])[:200]}}]
+        }
+    if assessment.get("parkeringsnorm"):
+        page_properties["Parkeringsnorm"] = {
+            "rich_text": [{"text": {"content": str(assessment["parkeringsnorm"])[:200]}}]
+        }
+    if assessment.get("varetilkorsel_mulighed") is not None:
+        page_properties["Varetilkørsel"] = {"checkbox": bool(assessment["varetilkorsel_mulighed"])}
+
     response = requests.post(
         "https://api.notion.com/v1/pages",
         headers=_headers(),

@@ -19,6 +19,16 @@ Salling Groups butiksformater og krav:
 - FØTEX: 1.500–5.000 m², supermarked-format, kræver min. 15.000 beboere i 2km radius
 - BILKA: 10.000+ m², varehus, kræver min. 50.000 beboere i 5km radius
 
+Udtrækningsregler for nye felter (sæt null hvis ikke nævnt i planen):
+- bebyggelsesprocent: tal i % angivet i planen (fx 40 for "40%")
+- max_bygningshojde_m: maksimal bygningshøjde i meter
+- max_etager: maksimalt antal etager
+- parkeringsnorm: beskriv kortfattet parkeringskravet (fx "1 plads pr. 25 m² erhverv")
+- planlagte_boliger: antal planlagte boliger hvis planen inkluderer boliger
+- tidshorisont: hvornår forventes planen realiseret (fx "2026–2029" eller "ikke angivet")
+- varetilkorsel_mulighed: true hvis planen eksplicit tillader lastbiltilkørsel/varegård
+- specifikke_forbud: liste over eksplicitte forbud i planen (fx ["Ingen dagligvarer over 500 m²"])
+
 Svar KUN med gyldigt JSON — ingen preamble, ingen markdown-backticks."""
 
 
@@ -88,15 +98,23 @@ Returner præcis dette JSON-objekt:
   "confidence": "høj"/"middel"/"lav",
   "prioritet": "høj"/"middel"/"lav"/"ikke relevant",
   "format_match": ["NETTO", "FØTEX", "BILKA"],
-  "max_butiksareal_m2": 0,
+  "max_butiksareal_m2": null,
   "detailhandel_tilladt": true/false,
   "dagligvare_specifik": true/false,
   "estimeret_opland_beboere": 0,
   "kannibaliseringsrisiko": "ingen"/"lav"/"middel"/"høj",
   "hoering_aktiv": true/false,
+  "bebyggelsesprocent": null,
+  "max_bygningshojde_m": null,
+  "max_etager": null,
+  "parkeringsnorm": null,
+  "planlagte_boliger": null,
+  "tidshorisont": null,
+  "varetilkorsel_mulighed": null,
+  "specifikke_forbud": [],
   "sammenfattning": "2-3 sætninger om hvad planen indeholder og hvorfor den er/ikke er relevant",
   "aktion": "Undersøg nærmere"/"Følg op ved vedtagelse"/"Ikke relevant — arkivér",
-  "flags": ["evt. særlige bemærkninger"]
+  "flags": []
 }}"""
 
     response = requests.post(
